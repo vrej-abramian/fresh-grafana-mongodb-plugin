@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "fresh-grafana-mongodb-plugin.fullname" . }}-test-connection"
+  labels:
+    {{- include "fresh-grafana-mongodb-plugin.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "fresh-grafana-mongodb-plugin.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never
