@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "fresh-grafana-mongodb-plugin.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "fresh-grafana-mongodb-plugin.labels" . | nindent 4 }}
 spec:
@@ -34,17 +35,24 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: http
-              containerPort: 80
+            - name: {{ .Values.service.portName }}
+              containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
           livenessProbe:
-            httpGet:
-              path: /
-              port: http
+            failureThreshold: 3
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            successThreshold: 1
+            tcpSocket:
+              port: 3333
+            timeoutSeconds: 30
           readinessProbe:
-            httpGet:
-              path: /
-              port: http
+            failureThreshold: 5
+            periodSeconds: 20
+            successThreshold: 1
+            tcpSocket:
+              port: 3333
+            timeoutSeconds: 2
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
